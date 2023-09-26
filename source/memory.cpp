@@ -1,5 +1,4 @@
 #include "memory.hpp"
-#include <cstddef>
 
 void Memory::Interact(Linker *Object) { Object->Resolve(this); }
 
