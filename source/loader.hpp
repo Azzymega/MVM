@@ -28,6 +28,7 @@ struct loader : public ILoadConflict<loader *, classFile *>,
                 ILoadConflict<loader *, exceptionsTables *>,
                 ILoadConflict<loader *, lineNumberTable *>,
                 ILoadConflict<loader *, bytecode *>,
+                ILoadConflict<classFile *, byteBuffer *>,
                 ILoadInteraction<byteBuffer> {
 
   byteBuffer buffer;
@@ -47,6 +48,7 @@ struct loader : public ILoadConflict<loader *, classFile *>,
   loader *Resolve(exceptionsTables *Object) override;
   loader *Resolve(lineNumberTable *Object) override;
   loader *Resolve(bytecode *Object) override;
+  classFile *Resolve(byteBuffer *Object) override;
 
 private: // hackfix
   std::string cpoolget(u2 data);

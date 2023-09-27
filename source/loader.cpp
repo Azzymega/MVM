@@ -16,10 +16,12 @@ loader *loader::Resolve(classFile *Object) {
   Object->data.superClass = buffer.Resolve(u2());
   Resolve(&Object->intrf);
   Resolve(&Object->flds);
-  Resolve(&Object->mthds); // фиксить!!!!
+  Resolve(&Object->mthds);
   Resolve(&Object->attr);
   return nullptr;
 }
+
+
 
 loader *loader::Resolve(attributes *Object) {
   Object->attributes_count = buffer.Resolve(u2());
@@ -147,7 +149,7 @@ loader *loader::Resolve(classFileMetadata *Object) {
 
 loader *loader::Resolve(std::string *Object) {
   readStream.open(*Object);
-  if (!readStream.is_open()) {
+  if (!readStream.is_open() && *Object!="null") {
     throw "FAIL";
   }
   return nullptr;
@@ -204,6 +206,22 @@ loader *loader::Resolve(bytecode *Object) {
     line = buffer.Resolve(u1());
   }
   return nullptr;
+}
+
+
+classFile *loader::Resolve(byteBuffer *Object) {
+  classFile *fl = new classFile();
+  this->buffer = *Object;
+  Resolve(&fl->data);
+  Resolve(&fl->pool);
+  fl->data.accessFlags = buffer.Resolve(u2());
+  fl->data.thisClass = buffer.Resolve(u2());
+  fl->data.superClass = buffer.Resolve(u2());
+  Resolve(&fl->intrf);
+  Resolve(&fl->flds);
+  Resolve(&fl->mthds);
+  Resolve(&fl->attr);
+  return fl;
 }
 
 std::string loader::cpoolget(u2 data) {
