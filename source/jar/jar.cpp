@@ -28,29 +28,26 @@ JarLoader *JarLoader::Resolve(Jar *Object) {
 }
 
 JarLoader *JarLoader::Resolve(LocalFileHeaders *Object) {
-  if (this->loader.buffer.Resolve(u4()) != LFHsignature) { // убрать сдвиг с byteBuffer!
+  if (this->loader.buffer.Resolve(u4()) !=
+      LFHsignature) { // убрать сдвиг с byteBuffer!
     this->loader.buffer.byteBufferCounter -= 4;
     return nullptr;
   } else {
     LocalFileHeader hd = LocalFileHeader();
-    hd.versionToExtract = this->loader.buffer.Resolve(u2());
-    hd.gpFlag = this->loader.buffer.Resolve(u2());
-    hd.compressionMethod = this->loader.buffer.Resolve(u2());
+    this->loader.buffer.Resolve(&hd.versionToExtract);
+    this->loader.buffer.Resolve(&hd.gpFlag);
+    this->loader.buffer.Resolve(&hd.compressionMethod);
     if (hd.compressionMethod != 0) {
       throw "[JARLOADER] JAR IS COMPRESSED!";
       abort();
     }
-    hd.modificationTime = this->loader.buffer.Resolve(u2());
-    hd.modificationDate = this->loader.buffer.Resolve(u2());
-    hd.crc32 = this->loader.buffer.Resolve(u4());
-    hd.compressedSize = this->loader.buffer.Resolve(u4());
-    if (hd.compressedSize != 0) {
-      throw "[JARLOADER] JAR IS COMPRESSED!";
-      abort();
-    }
-    hd.uncompressedSize = this->loader.buffer.Resolve(u4());
-    hd.fileNameLength = this->loader.buffer.Resolve(u2());
-    hd.extraFieldLength = this->loader.buffer.Resolve(u2());
+    this->loader.buffer.Resolve(&hd.modificationTime);
+    this->loader.buffer.Resolve(&hd.modificationDate);
+    this->loader.buffer.Resolve(&hd.crc32);
+    this->loader.buffer.Resolve(&hd.compressedSize);
+    this->loader.buffer.Resolve(&hd.uncompressedSize);
+    this->loader.buffer.Resolve(&hd.fileNameLength);
+    this->loader.buffer.Resolve(&hd.extraFieldLength);
     std::string filename;
     for (int i = 0; i < hd.fileNameLength; i++) {
       filename.push_back(this->loader.buffer.Resolve(u1()));
@@ -78,30 +75,26 @@ JarLoader *JarLoader::Resolve(CentralDirectoryFileHeaders *Object) {
     return nullptr;
   } else {
     CentralDirectoryFileHeader hd;
-    hd.versionMadeBy = this->loader.buffer.Resolve(u2());
-    hd.versionToExtract = this->loader.buffer.Resolve(u2());
-    hd.gpFlag = this->loader.buffer.Resolve(u2());
-    hd.compressionMethod = this->loader.buffer.Resolve(u2());
+    this->loader.buffer.Resolve(&hd.versionMadeBy);
+    this->loader.buffer.Resolve(&hd.versionToExtract);
+    this->loader.buffer.Resolve(&hd.gpFlag);
+    this->loader.buffer.Resolve(&hd.compressionMethod);
     if (hd.compressionMethod != 0) {
       throw "[JARLOADER] JAR IS COMPRESSED!";
       abort();
     }
-    hd.modificationTime = this->loader.buffer.Resolve(u2());
-    hd.modificationDate = this->loader.buffer.Resolve(u2());
-    hd.crc32 = this->loader.buffer.Resolve(u4());
-    hd.compressedSize = this->loader.buffer.Resolve(u4());
-    if (hd.compressedSize != 0) {
-      throw "[JARLOADER] JAR IS COMPRESSED!";
-      abort();
-    }
-    hd.uncompressedSize = this->loader.buffer.Resolve(u4());
-    hd.fileNameLength = this->loader.buffer.Resolve(u2());
-    hd.extraFieldLength = this->loader.buffer.Resolve(u2());
-    hd.fileCommentLength = this->loader.buffer.Resolve(u2());
-    hd.diskNumber = this->loader.buffer.Resolve(u2());
-    hd.internalFileAttributes = this->loader.buffer.Resolve(u4());
-    hd.externalFileAttributes = this->loader.buffer.Resolve(u4());
-    hd.localFileHeaderOffset = this->loader.buffer.Resolve(u4());
+    this->loader.buffer.Resolve(&hd.modificationTime);
+    this->loader.buffer.Resolve(&hd.modificationDate);
+    this->loader.buffer.Resolve(&hd.crc32);
+    this->loader.buffer.Resolve(&hd.compressedSize);
+    this->loader.buffer.Resolve(&hd.uncompressedSize);
+    this->loader.buffer.Resolve(&hd.fileNameLength);
+    this->loader.buffer.Resolve(&hd.extraFieldLength);
+    this->loader.buffer.Resolve(&hd.fileCommentLength);
+    this->loader.buffer.Resolve(&hd.diskNumber);
+    this->loader.buffer.Resolve(&hd.internalFileAttributes);
+    this->loader.buffer.Resolve(&hd.externalFileAttributes);
+    this->loader.buffer.Resolve(&hd.localFileHeaderOffset);
     std::string filename;
     for (int i = 0; i < hd.fileNameLength; i++) {
       filename.push_back(this->loader.buffer.Resolve(u1()));
@@ -124,14 +117,14 @@ JarLoader *JarLoader::Resolve(CentralDirectoryFileHeaders *Object) {
 }
 
 JarLoader *JarLoader::Resolve(EndOfCentralDirectoryRecord *Object) {
-  Object->signature = this->loader.buffer.Resolve(u4());
-  Object->diskNumber = this->loader.buffer.Resolve(u2());
-  Object->startDiskNumber = this->loader.buffer.Resolve(u2());
-  Object->numberCentralDirectoryRecord = this->loader.buffer.Resolve(u2());
-  Object->totalCentralDirectoryRecord = this->loader.buffer.Resolve(u2());
-  Object->sizeOfCentralDirectory = this->loader.buffer.Resolve(u4());
-  Object->centralDirectoryOffset = this->loader.buffer.Resolve(u4());
-  Object->commentLength = this->loader.buffer.Resolve(u2());
+  this->loader.buffer.Resolve(&Object->signature);
+  this->loader.buffer.Resolve(&Object->diskNumber);
+  this->loader.buffer.Resolve(&Object->startDiskNumber);
+  this->loader.buffer.Resolve(&Object->numberCentralDirectoryRecord);
+  this->loader.buffer.Resolve(&Object->totalCentralDirectoryRecord);
+  this->loader.buffer.Resolve(&Object->sizeOfCentralDirectory);
+  this->loader.buffer.Resolve(&Object->centralDirectoryOffset);
+  this->loader.buffer.Resolve(&Object->commentLength);
   CommentData commentData;
   for (int i = 0; i < Object->commentLength; i++) {
     commentData.commentData.push_back(this->loader.buffer.Resolve(u1()));

@@ -6,11 +6,17 @@
 struct byteBuffer : public ILoadConflict<byteBuffer *, std::ifstream *>,
                     ILoadConflict<u1, u1>,
                     ILoadConflict<u2, u2>,
-                    ILoadConflict<u4, u4> {
+                    ILoadConflict<u4, u4>,
+                    ILoadConflict<void, u1*>,
+                    ILoadConflict<void, u2*>,
+                    ILoadConflict<void, u4*> {
   byteBuffer *Resolve(std::ifstream *Object) override;
   unsigned char Resolve(unsigned char Object) override;
   unsigned int Resolve(unsigned int Object) override;
   unsigned short Resolve(unsigned short Object) override;
+  void Resolve(unsigned char *Object) override;
+  void Resolve(unsigned int *Object) override;
+  void Resolve(unsigned short *Object) override;
   std::vector<u1> buffer;
   u4 byteBufferCounter;
 };

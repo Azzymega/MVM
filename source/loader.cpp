@@ -262,3 +262,28 @@ unsigned short byteBuffer::Resolve(unsigned short Object) {
   byteBufferCounter += sizeof(u2);
   return temp[0] >> 8 | temp[1];
 }
+
+void byteBuffer::Resolve(unsigned char *Object) {
+  u1 temp[1];
+  temp[0] = buffer[byteBufferCounter];
+  byteBufferCounter += sizeof(u1);
+  *Object = temp[0];
+}
+
+void byteBuffer::Resolve(unsigned int *Object) {
+  u2 temp[4];
+  temp[0] = buffer[byteBufferCounter];
+  temp[1] = buffer[byteBufferCounter + 1];
+  temp[2] = buffer[byteBufferCounter + 2];
+  temp[3] = buffer[byteBufferCounter + 3];
+  byteBufferCounter += sizeof(u4);
+  *Object = temp[0] | temp[1] | temp[2] | temp[3];
+}
+
+void byteBuffer::Resolve(unsigned short *Object) {
+  u2 temp[2];
+  temp[0] = buffer[byteBufferCounter];
+  temp[1] = buffer[byteBufferCounter + 1];
+  byteBufferCounter += sizeof(u2);
+  *Object = temp[0] | temp[1];
+}
