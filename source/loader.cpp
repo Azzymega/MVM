@@ -211,6 +211,7 @@ loader *loader::Resolve(bytecode *Object) {
 
 classFile *loader::Resolve(byteBuffer *Object) {
   classFile *fl = new classFile();
+  this->file = fl;
   this->buffer = *Object;
   Resolve(&fl->data);
   Resolve(&fl->pool);
@@ -271,7 +272,7 @@ void byteBuffer::Resolve(unsigned char *Object) {
 }
 
 void byteBuffer::Resolve(unsigned int *Object) {
-  u2 temp[4];
+  u1 temp[4];
   temp[0] = buffer[byteBufferCounter];
   temp[1] = buffer[byteBufferCounter + 1];
   temp[2] = buffer[byteBufferCounter + 2];
@@ -281,7 +282,7 @@ void byteBuffer::Resolve(unsigned int *Object) {
 }
 
 void byteBuffer::Resolve(unsigned short *Object) {
-  u2 temp[2];
+  u1 temp[2];
   temp[0] = buffer[byteBufferCounter];
   temp[1] = buffer[byteBufferCounter + 1];
   byteBufferCounter += sizeof(u2);

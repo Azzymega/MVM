@@ -28,8 +28,7 @@ JarLoader *JarLoader::Resolve(Jar *Object) {
 }
 
 JarLoader *JarLoader::Resolve(LocalFileHeaders *Object) {
-  if (this->loader.buffer.Resolve(u4()) !=
-      LFHsignature) { // убрать сдвиг с byteBuffer!
+  if (this->loader.buffer.Resolve(u4()) != LFHsignature) {
     this->loader.buffer.byteBufferCounter -= 4;
     return nullptr;
   } else {
@@ -57,9 +56,11 @@ JarLoader *JarLoader::Resolve(LocalFileHeaders *Object) {
       data.extraData.push_back(this->loader.buffer.Resolve(u1()));
     }
     Data dt;
-    for (int i = 0; i < hd.uncompressedSize; i++) {
-      dt.archiveData.push_back(this->loader.buffer.Resolve(u1()));
+    while (loader.buffer.Resolve(u1()) != 80) {
+      loader.buffer.byteBufferCounter--; // hackfix!!!
+      dt.archiveData.push_back(this->loader.buffer.Resolve(u1())); // hackfix!!! 7zip can't count file size!
     }
+    this->loader.buffer.byteBufferCounter-=1; // hackfix!!!
     hd.filename = filename;
     hd.extraData = data;
     hd.data = dt;

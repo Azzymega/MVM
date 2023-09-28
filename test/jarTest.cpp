@@ -11,7 +11,7 @@ int main() {
   loader ld = loader();
   Jar jarFile;
   std::vector<classFile> files;
-  jarFile.diskLocation = "test.jar";
+  jarFile.diskLocation = "test2.jar";
   JarLoader jld;
   jarFile.Interact(&jld);
   JavaArhive arch;
@@ -20,6 +20,9 @@ int main() {
     std::cout << "Jar loading and init test success" << std::endl;
   } else {
     std::cout << "JAR LOADING AND INIT TEST FAILED!!!" << std::endl;
+  }
+  for (byteBuffer *buf : arch.files.classFiles) {
+    files.push_back(*ld.Resolve(buf));
   }
   return 0;
 }
