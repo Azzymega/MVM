@@ -84,7 +84,7 @@ struct code
     attributes attr;
 };
 
-struct attribute
+struct attribute // переделать на умные атрибуты!!!
 {
     u2 name;
     u4 length;

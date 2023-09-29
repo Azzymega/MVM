@@ -176,7 +176,7 @@ Memory *Memory::Resolve(DataPool *Object) {
       Object->data.emplace_back(poolElement);
       break;
     case cpType::CONSTANT_NameAndType:
-      poolElement.tag = UnownT;
+      poolElement.tag = UnknownT;
       poolElement.Boiler.magic = 1;
       Object->data.emplace_back(poolElement);
       break;

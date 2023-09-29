@@ -78,7 +78,7 @@ enum DataPoolTypes {
   LongT,
   FloatT,
   IntegerT,
-  UnownT
+  UnknownT
 };
 
 struct Boiler {
