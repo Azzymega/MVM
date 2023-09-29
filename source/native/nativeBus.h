@@ -51,4 +51,4 @@ struct ParameterBundle {
   StackReturnValue returnValue;
 };
 
-NBCALL void NBTEST(ParameterBundle BUNDLE);
+NBCALL void NBTEST(ParameterBundle BUNDLE); // подумать о загрузчике native библиотек прямо в джаве
