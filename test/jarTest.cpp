@@ -10,7 +10,7 @@ int main() {
   std::cout << "JAR TEST STARTED!" << std::endl << std::endl;
   loader ld = loader();
   Jar jarFile;
-  std::vector<classFile> files;
+  std::vector<classFile *> files;
   jarFile.diskLocation = "test2.jar";
   JarLoader jld;
   jarFile.Interact(&jld);
@@ -22,7 +22,12 @@ int main() {
     std::cout << "JAR LOADING AND INIT TEST FAILED!!!" << std::endl;
   }
   for (byteBuffer *buf : arch.files.classFiles) {
-    files.push_back(*ld.Resolve(buf));
+    files.push_back(ld.Resolve(buf));
+  }
+  if (files[0]->attr.attributes->at(0).sourceFile.index == 16) {
+    std::cout << "Class file integrity test passed" << std::endl;
+  } else {
+    std::cout << "CLASS FILE INTEGRITY TEST FAILED!!!" << std::endl;
   }
   return 0;
 }
