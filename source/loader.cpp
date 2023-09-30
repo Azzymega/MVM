@@ -25,8 +25,8 @@ loader *loader::Resolve(classFile *Object) {
 
 loader *loader::Resolve(attributes *Object) {
   Object->attributes_count = buffer.Resolve(u2());
-  Object->attributes = new std::vector<attribute>(Object->attributes_count);
-  for (auto &&attr : *Object->attributes) {
+  Object->attr = new std::vector<attribute>(Object->attributes_count);
+  for (auto &&attr : *Object->attr) {
     attr.name = buffer.Resolve(u2());
     attr.length = buffer.Resolve(u4());
     if (cpoolget(attr.name) == "SourceFile") {

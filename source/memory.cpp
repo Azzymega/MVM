@@ -1,17 +1,21 @@
 #include "memory.hpp"
+#include <vector>
 
 void Memory::Interact(Linker *Object) { Object->Resolve(this); }
 
 Memory *Memory::Resolve(classFile *Object) {
   this->buffer.buffer = Object;
-  Class Klass = Class();
-  Resolve(&Klass.pool);
-  Resolve(&Klass.mainInfo);
-  Resolve(&Klass.interfaces);
-  Resolve(&Klass.fields);
-  Resolve(&Klass.methods);
-  Klass.attr = this->buffer.buffer->attr;
-  this->info.classes.emplace_back(Klass);
+  Class *Klass = new Class();
+  this->buffer.klassBuffer = Klass;
+  Resolve(&Klass->pool);
+  Resolve(&Klass->mainInfo);
+  Resolve(&Klass->interfaces);
+  Resolve(&Klass->fields);
+  Resolve(&Klass->methods);
+  this->buffer.attrBuffer = &this->buffer.buffer->attr;
+  Klass->attr.attributes = new std::vector<NAttribute>();
+  Resolve(&Klass->attr);
+  this->info.classes.push_back(Klass);
   return nullptr;
 }
 
@@ -20,11 +24,15 @@ Memory *Memory::Resolve(ClassHeader *Object) {
   Object->maxVersion = this->buffer.buffer->data.maxVersion;
   Object->flags = Resolve(&this->buffer.buffer->data.accessFlags);
   Object->Class.className = this->buffer.buffer->pool.Resolve(
-      this->buffer.buffer->pool.elements[this->buffer.buffer->data.thisClass-1]
-          .constantClass.nameIndex-1);
+      this->buffer.buffer->pool
+          .elements[this->buffer.buffer->data.thisClass - 1]
+          .constantClass.nameIndex -
+      1);
   Object->superClass.className = this->buffer.buffer->pool.Resolve(
-      this->buffer.buffer->pool.elements[this->buffer.buffer->data.superClass-1]
-          .constantClass.nameIndex-1);
+      this->buffer.buffer->pool
+          .elements[this->buffer.buffer->data.superClass - 1]
+          .constantClass.nameIndex -
+      1);
   return nullptr;
 }
 
@@ -210,6 +218,9 @@ Memory *Memory::Resolve(Interfaces *Object) {
 
 Memory *Memory::Resolve(Fields *Object) {
   for (field fld : this->buffer.buffer->flds.elements) {
+    NAttributes attrs;
+    this->buffer.attrBuffer = &fld.attributes;
+    Resolve(&attrs);
     Object->fields.emplace_back(Field{
         Resolve(&fld.access_flags),
         std::string(*this->buffer.buffer->pool.elements.at(fld.name_index - 1)
@@ -217,13 +228,16 @@ Memory *Memory::Resolve(Fields *Object) {
         std::string(
             *this->buffer.buffer->pool.elements.at(fld.signature_index - 1)
                  .constantUTF8.utf8),
-        fld.attributes});
+        attrs});
   }
   return nullptr;
 }
 
 Memory *Memory::Resolve(Methods *Object) {
   for (method mth : this->buffer.buffer->mthds.elements) {
+    NAttributes attrs = NAttributes();
+    this->buffer.attrBuffer = &mth.attributes;
+    Resolve(&attrs);
     Object->methods.emplace_back(Method{
         Resolve(&mth.access_flags),
         std::string(*this->buffer.buffer->pool.elements.at(mth.name_index - 1)
@@ -231,9 +245,82 @@ Memory *Memory::Resolve(Methods *Object) {
         std::string(
             *this->buffer.buffer->pool.elements.at(mth.signature_index - 1)
                  .constantUTF8.utf8),
-        mth.attributes});
+        attrs});
+  }
+  return nullptr;
+}
+
+Memory *Memory::Resolve(NAttributes *Object) {
+  NAttribute Nattr = NAttribute();
+  for (auto &&attr : *this->buffer.attrBuffer->attr) {
+    if (this->buffer.buffer->pool.Resolve(attr.name - 1) == "SourceFile") {
+      Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
+      Nattr.type = SmartAttributesType::NTSourceFile;
+      Nattr.length = attr.length;
+      Nattr.sourceFile.name =
+          &this->buffer.klassBuffer->pool.data.at(attr.sourceFile.index - 1);
+      Object->attributes->push_back(Nattr);
+    } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
+               "ConstantValue") {
+      Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
+      Nattr.type = SmartAttributesType::NTConstantValue;
+      Nattr.length = attr.length;
+      Nattr.constantValue.constant =
+          &this->buffer.klassBuffer->pool.data.at(attr.constantValue.index - 1);
+      Object->attributes->push_back(Nattr);
+    } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
+               "Exceptions") {
+      Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
+      Nattr.type = SmartAttributesType::NTExceptions;
+      Nattr.length = attr.length;
+      for (auto &&exc : *attr.exceptions.tableExceptions) {
+        Nattr.exceptions.exceptions->push_back(
+            &this->buffer.klassBuffer->pool.data.at(exc));
+      }
+      Object->attributes->push_back(Nattr);
+    } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
+               "LineNumberTable") {
+      Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
+      Nattr.type = SmartAttributesType::NTLineNumberTable;
+      Nattr.length = attr.length;
+      for (auto &&exc : *attr.lineNumberTable.table) {
+        Nattr.liTable.table->push_back(
+            NLineNumber{exc.startPc, exc.lineNumber});
+      }
+      Object->attributes->push_back(Nattr);
+    } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
+               "LocalVariableTable") {
+      Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
+      Nattr.type = SmartAttributesType::NTLocalVariableTable;
+      Nattr.length = attr.length;
+      for (auto &&exc : *attr.localVariableTable.table) {
+        Nattr.lTable.table->push_back(NLocalVariable{
+            exc.start_pc, exc.length,
+            &this->buffer.klassBuffer->pool.data.at(exc.name_index),
+            &this->buffer.klassBuffer->pool.data.at(exc.signature_index),
+            exc.slot});
+      }
+      Object->attributes->push_back(Nattr);
+    } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) == "Code") {
+      Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
+      Nattr.type = SmartAttributesType::NTCode;
+      Nattr.length = attr.length;
+      Nattr.code.maxStack = attr.code.maxStack;
+      Nattr.code.maxLocals = attr.code.maxLocals;
+      Nattr.code.internalCode = attr.code.internalCode;
+      Nattr.code.tables = attr.code.tables;
+      this->buffer.attrBuffer = &attr.code.attr;
+      Resolve(&Nattr.code.attr);
+    }
   }
   return nullptr;
 }
 
 Linker *Linker::Resolve(Memory *Object) { return nullptr; }
+
+NAttribute::NAttribute() {
+  exceptions.exceptions = new std::vector<DataPoolType *>();
+  liTable.table = new std::vector<NLineNumber>();
+  lTable.table = new std::vector<NLocalVariable>();
+  code.attr.attributes = new std::vector<NAttribute>();
+}

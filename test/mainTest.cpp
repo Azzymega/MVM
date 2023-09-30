@@ -9,7 +9,7 @@ int main()
     classFile file;
     file.data.diskLocation = "test.class";
     ld.Resolve(&file);
-    if (file.attr.attributes->at(0).sourceFile.index == 22)
+    if (file.attr.attr->at(0).sourceFile.index == 22)
     {
         std::cout << "Class file parser test passed" << std::endl;
     }
@@ -21,7 +21,7 @@ int main()
     file = classFile();
     file.data.diskLocation = "test2.class";
     ld.Resolve(&file);
-    if (file.attr.attributes->at(0).sourceFile.index == 16)
+    if (file.attr.attr->at(0).sourceFile.index == 16)
     {
         std::cout << "Class file parser test passed" << std::endl;
     }
@@ -31,7 +31,7 @@ int main()
     }
     Memory mem;
     mem.Resolve(&file);
-    if (mem.info.classes[0].pool.data[15].String.info == "System.Machine.java") {
+    if (mem.info.classes.at(0)->attr.attributes->at(0).sourceFile.name->String.info == "System.Machine.java") {
         std::cout << "Class file digitalization test passed" << std::endl;
     }
     else {

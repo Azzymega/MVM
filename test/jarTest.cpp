@@ -24,7 +24,7 @@ int main() {
   for (byteBuffer *buf : arch.files.classFiles) {
     files.push_back(ld.Resolve(buf));
   }
-  if (files[0]->attr.attributes->at(0).sourceFile.index == 16) {
+  if (files[0]->attr.attr->at(0).sourceFile.index == 16) {
     std::cout << "Class file integrity test passed" << std::endl;
   } else {
     std::cout << "CLASS FILE INTEGRITY TEST FAILED!!!" << std::endl;

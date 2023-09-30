@@ -18,20 +18,8 @@ using Double = constantDouble;
 using Long = constantLong;
 using Float = constantFloat;
 using Integer = constantInteger;
-
-struct Field {
-  AccessFlags fieldFlags;
-  std::string name;
-  std::string signature;
-  attributes attributes;
-};
-
-struct Method {
-  AccessFlags methodFlags;
-  std::string name;
-  std::string signature;
-  attributes attributes;
-};
+struct Method;
+struct Field;
 
 struct NameAndType {
   std::string name;
@@ -81,6 +69,15 @@ enum DataPoolTypes {
   UnknownT
 };
 
+enum SmartAttributesType {
+  NTSourceFile,
+  NTConstantValue,
+  NTExceptions,
+  NTCode,
+  NTLineNumberTable,
+  NTLocalVariableTable
+};
+
 struct Boiler {
   u1 magic;
 };
@@ -98,8 +95,86 @@ struct DataPoolType {
   Boiler Boiler;
 };
 
+using NExceptionsTable = exceptionsTables;
+using NBytecode = bytecode;
+
+struct NExceptions {
+  std::vector<DataPoolType *> *exceptions;
+};
+
+struct NSourceFile {
+  DataPoolType *name;
+};
+
+struct NConstantValue {
+  DataPoolType *constant;
+};
+
 struct DataPool {
   std::vector<DataPoolType> data;
+};
+
+struct NCode;
+struct NAttribute;
+
+struct NLineNumber {
+  u2 startPC;
+  u2 lineNumber;
+};
+
+struct NLocalVariable {
+  u2 start_pc;
+  u2 length;
+  DataPoolType *nameIndex;
+  DataPoolType *signature;
+  u2 slot;
+};
+
+struct NLocalVariableTable {
+  std::vector<NLocalVariable> *table;
+};
+
+struct NLineNumberTable {
+  std::vector<NLineNumber> *table;
+};
+
+struct NAttributes {
+  std::vector<NAttribute> *attributes;
+};
+
+struct NCode {
+  u2 maxStack;
+  u2 maxLocals;
+  NBytecode internalCode;
+  NExceptionsTable tables;
+  NAttributes attr;
+};
+
+struct NAttribute {
+  SmartAttributesType type;
+  DataPoolType *name;
+  u4 length;
+  NSourceFile sourceFile;
+  NConstantValue constantValue;
+  NExceptions exceptions;
+  NCode code;
+  NLocalVariableTable lTable;
+  NLineNumberTable liTable;
+  NAttribute();
+};
+
+struct Field {
+  AccessFlags fieldFlags;
+  std::string name;
+  std::string signature;
+  NAttributes attributes;
+};
+
+struct Method {
+  AccessFlags methodFlags;
+  std::string name;
+  std::string signature;
+  NAttributes attributes;
 };
 
 struct ClassHeader {
@@ -116,22 +191,25 @@ struct Class {
   Interfaces interfaces;
   Fields fields;
   Methods methods;
-  attributes attr;
+  NAttributes attr;
 };
 
 struct Classes {
-  std::vector<Class> classes;
+  std::vector<Class *> classes;
 };
 
 struct ClassFileBuffer {
   classFile *buffer;
+  Class *klassBuffer;
+  attributes *attrBuffer;
 };
 
 struct Memory;
 
 struct Linker : public ILoadConflict<Linker *, Memory *> {
   Linker *Resolve(Memory *Object) override;
-}; // начать писать класс Machine внутри которого будет Memory и интерпретатор, дописать кучу в Memory!!!
+}; // начать писать класс Machine внутри которого будет Memory и интерпретатор,
+   // дописать кучу в Memory!!!
 
 struct Memory : public ILoadInteraction<Linker>,
                 ILoadConflict<AccessFlags, u2 *>,
@@ -140,7 +218,8 @@ struct Memory : public ILoadInteraction<Linker>,
                 ILoadConflict<Memory *, DataPool *>,
                 ILoadConflict<Memory *, Interfaces *>,
                 ILoadConflict<Memory *, Fields *>,
-                ILoadConflict<Memory *, Methods *> {
+                ILoadConflict<Memory *, Methods *>,
+                ILoadConflict<Memory *, NAttributes *> {
   Classes info;
   Linker linker;
   ClassFileBuffer buffer;
@@ -153,4 +232,5 @@ struct Memory : public ILoadInteraction<Linker>,
   Memory *Resolve(Interfaces *Object) override;
   Memory *Resolve(Fields *Object) override;
   Memory *Resolve(Methods *Object) override;
+  Memory *Resolve(NAttributes *Object) override;
 };
