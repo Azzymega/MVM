@@ -205,8 +205,17 @@ struct ClassFileBuffer {
 
 struct Memory;
 
-struct Linker : public ILoadConflict<Linker *, Memory *> {
+struct Linker : public ILoadConflict<Linker *, Memory *>,
+                ILoadConflict<Linker *, DataPool *>,
+                ILoadConflict<Linker *, Class *>,
+                ILoadConflict<Linker *, Classes *>,
+                ILoadConflict<Linker *, ClassLink *> {
+  Memory *buffer;
   Linker *Resolve(Memory *Object) override;
+  Linker *Resolve(DataPool *Object) override;
+  Linker *Resolve(Class *Object) override;
+  Linker *Resolve(Classes *Object) override;
+  Linker *Resolve(ClassLink *Object) override;
 }; // начать писать класс Machine внутри которого будет Memory и интерпретатор,
    // дописать кучу в Memory!!!
 

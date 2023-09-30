@@ -5,6 +5,7 @@ void Memory::Interact(Linker *Object) { Object->Resolve(this); }
 
 Memory *Memory::Resolve(classFile *Object) {
   this->buffer.buffer = Object;
+  this->linker.buffer = this;
   Class *Klass = new Class();
   this->buffer.klassBuffer = Klass;
   Resolve(&Klass->pool);
@@ -15,6 +16,7 @@ Memory *Memory::Resolve(classFile *Object) {
   this->buffer.attrBuffer = &this->buffer.buffer->attr;
   Resolve(&Klass->attr);
   this->info.classes.push_back(Klass);
+  linker.Resolve(&info);
   return nullptr;
 }
 
@@ -314,4 +316,83 @@ Memory *Memory::Resolve(NAttributes *Object) {
   return nullptr;
 }
 
-Linker *Linker::Resolve(Memory *Object) { return nullptr; }
+Linker *Linker::Resolve(Memory *Object) {
+  this->buffer = Object;
+  return nullptr;
+}
+
+Linker *Linker::Resolve(DataPool *Object) {
+  for (auto &&poolElement : Object->data) {
+    switch (poolElement.tag) {
+    case ClassT:
+      for (auto &&klazz : this->buffer->info.classes) {
+        if (klazz->mainInfo.Class.className == poolElement.Class.className) {
+          poolElement.Class.link = klazz;
+        }
+      }
+      break;
+    case MethodT:
+      for (auto &&klazz : this->buffer->info.classes) {
+        if (klazz->mainInfo.Class.className ==
+            poolElement.Method.data.Class.className) {
+          poolElement.Method.data.Class.link = klazz;
+          for (auto &&method : klazz->methods.methods) {
+            if (method.name == poolElement.Method.data.info.name) {
+              poolElement.Method.Method = &method;
+            }
+          }
+        }
+      }
+      break;
+    case FieldT:
+      for (auto &&klazz : this->buffer->info.classes) {
+        if (klazz->mainInfo.Class.className ==
+            poolElement.Field.data.Class.className) {
+          poolElement.Field.data.Class.link = klazz;
+          for (auto &&field : klazz->fields.fields) {
+            if (field.name == poolElement.Field.data.info.name) {
+              poolElement.Field.Field = &field;
+            }
+          }
+        }
+      }
+      break;
+    case DoubleT:
+      break;
+    case StringT:
+      break;
+    case LongT:
+      break;
+    case FloatT:
+      break;
+    case IntegerT:
+      break;
+    case UnknownT:
+      break;
+    }
+  }
+  return nullptr;
+}
+
+Linker * Linker::Resolve(Class *Object) {
+  Resolve(&Object->mainInfo.Class);
+  Resolve(&Object->mainInfo.superClass);
+  Resolve(&Object->pool);
+  return nullptr;
+}
+
+Linker *Linker::Resolve(Classes *Object) {
+  for (auto &&klazz : Object->classes) {
+    Resolve(klazz);
+  }
+  return nullptr;
+}
+
+Linker *Linker::Resolve(ClassLink *Object) {
+  for (auto &&klazz : this->buffer->info.classes) {
+    if (klazz->mainInfo.Class.className == Object->className) {
+      Object->link = klazz;
+    }
+  }
+  return nullptr;
+}
