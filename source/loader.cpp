@@ -240,6 +240,7 @@ byteBuffer *byteBuffer::Resolve(std::ifstream *Object) {
 }
 
 unsigned char byteBuffer::Resolve(unsigned char Object) {
+  Object = 1;
   u1 temp[1];
   temp[0] = buffer[byteBufferCounter];
   byteBufferCounter += sizeof(u1);
@@ -247,6 +248,7 @@ unsigned char byteBuffer::Resolve(unsigned char Object) {
 }
 
 unsigned int byteBuffer::Resolve(unsigned int Object) {
+  Object = 2;
   u2 temp[4];
   temp[0] = buffer[byteBufferCounter];
   temp[1] = buffer[byteBufferCounter + 1];
@@ -257,6 +259,7 @@ unsigned int byteBuffer::Resolve(unsigned int Object) {
 }
 
 unsigned short byteBuffer::Resolve(unsigned short Object) {
+  Object = 4;
   u2 temp[2];
   temp[0] = buffer[byteBufferCounter];
   temp[1] = buffer[byteBufferCounter + 1];

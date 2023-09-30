@@ -99,7 +99,7 @@ using NExceptionsTable = exceptionsTables;
 using NBytecode = bytecode;
 
 struct NExceptions {
-  std::vector<DataPoolType *> *exceptions;
+  std::vector<DataPoolType> exceptions;
 };
 
 struct NSourceFile {
@@ -131,15 +131,15 @@ struct NLocalVariable {
 };
 
 struct NLocalVariableTable {
-  std::vector<NLocalVariable> *table;
+  std::vector<NLocalVariable> table;
 };
 
 struct NLineNumberTable {
-  std::vector<NLineNumber> *table;
+  std::vector<NLineNumber> table;
 };
 
 struct NAttributes {
-  std::vector<NAttribute> *attributes;
+  std::vector<NAttribute> attributes;
 };
 
 struct NCode {
@@ -160,7 +160,6 @@ struct NAttribute {
   NCode code;
   NLocalVariableTable lTable;
   NLineNumberTable liTable;
-  NAttribute();
 };
 
 struct Field {

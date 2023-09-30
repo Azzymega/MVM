@@ -1,4 +1,5 @@
 #include "jar.hpp"
+#include <corecrt.h>
 #include <cstdlib>
 
 loaderComponent *loaderComponent::Resolve(std::string *Object) {
@@ -139,7 +140,7 @@ JarLoader *JarLoader::Resolve(JavaArhive *Object) {
       std::string(this->buffer->locals.locals[0].data.archiveData.begin(),
                   this->buffer->locals.locals[0].data.archiveData.end());
   byteBuffer *buffer = new byteBuffer();
-  for (int i = 1; i < this->buffer->locals.locals.size(); i++) {
+  for (size_t i = 1; i < this->buffer->locals.locals.size(); i++) {
     buffer->byteBufferCounter = 0;
     buffer->buffer = this->buffer->locals.locals[i].data.archiveData;
     Object->files.classFiles.emplace_back(buffer);

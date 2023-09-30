@@ -13,7 +13,6 @@ Memory *Memory::Resolve(classFile *Object) {
   Resolve(&Klass->fields);
   Resolve(&Klass->methods);
   this->buffer.attrBuffer = &this->buffer.buffer->attr;
-  Klass->attr.attributes = new std::vector<NAttribute>();
   Resolve(&Klass->attr);
   this->info.classes.push_back(Klass);
   return nullptr;
@@ -259,7 +258,7 @@ Memory *Memory::Resolve(NAttributes *Object) {
       Nattr.length = attr.length;
       Nattr.sourceFile.name =
           &this->buffer.klassBuffer->pool.data.at(attr.sourceFile.index - 1);
-      Object->attributes->push_back(Nattr);
+      Object->attributes.push_back(Nattr);
     } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
                "ConstantValue") {
       Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
@@ -267,40 +266,39 @@ Memory *Memory::Resolve(NAttributes *Object) {
       Nattr.length = attr.length;
       Nattr.constantValue.constant =
           &this->buffer.klassBuffer->pool.data.at(attr.constantValue.index - 1);
-      Object->attributes->push_back(Nattr);
+      Object->attributes.push_back(Nattr);
     } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
                "Exceptions") {
       Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
       Nattr.type = SmartAttributesType::NTExceptions;
       Nattr.length = attr.length;
       for (auto &&exc : *attr.exceptions.tableExceptions) {
-        Nattr.exceptions.exceptions->push_back(
-            &this->buffer.klassBuffer->pool.data.at(exc));
+        Nattr.exceptions.exceptions.push_back(
+            this->buffer.klassBuffer->pool.data.at(exc));
       }
-      Object->attributes->push_back(Nattr);
+      Object->attributes.push_back(Nattr);
     } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
                "LineNumberTable") {
       Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
       Nattr.type = SmartAttributesType::NTLineNumberTable;
       Nattr.length = attr.length;
       for (auto &&exc : *attr.lineNumberTable.table) {
-        Nattr.liTable.table->push_back(
-            NLineNumber{exc.startPc, exc.lineNumber});
+        Nattr.liTable.table.push_back(NLineNumber{exc.startPc, exc.lineNumber});
       }
-      Object->attributes->push_back(Nattr);
+      Object->attributes.push_back(Nattr);
     } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
                "LocalVariableTable") {
       Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
       Nattr.type = SmartAttributesType::NTLocalVariableTable;
       Nattr.length = attr.length;
       for (auto &&exc : *attr.localVariableTable.table) {
-        Nattr.lTable.table->push_back(NLocalVariable{
+        Nattr.lTable.table.push_back(NLocalVariable{
             exc.start_pc, exc.length,
             &this->buffer.klassBuffer->pool.data.at(exc.name_index),
             &this->buffer.klassBuffer->pool.data.at(exc.signature_index),
             exc.slot});
       }
-      Object->attributes->push_back(Nattr);
+      Object->attributes.push_back(Nattr);
     } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) == "Code") {
       Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
       Nattr.type = SmartAttributesType::NTCode;
@@ -317,10 +315,3 @@ Memory *Memory::Resolve(NAttributes *Object) {
 }
 
 Linker *Linker::Resolve(Memory *Object) { return nullptr; }
-
-NAttribute::NAttribute() {
-  exceptions.exceptions = new std::vector<DataPoolType *>();
-  liTable.table = new std::vector<NLineNumber>();
-  lTable.table = new std::vector<NLocalVariable>();
-  code.attr.attributes = new std::vector<NAttribute>();
-}

@@ -31,7 +31,7 @@ int main()
     }
     Memory mem;
     mem.Resolve(&file);
-    if (mem.info.classes.at(0)->attr.attributes->at(0).sourceFile.name->String.info == "System.Machine.java") {
+    if (mem.info.classes.at(0)->attr.attributes.at(0).sourceFile.name->String.info == "System.Machine.java") {
         std::cout << "Class file digitalization test passed" << std::endl;
     }
     else {
