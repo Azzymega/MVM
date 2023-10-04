@@ -15,11 +15,11 @@ public class NameAndType {
         Descriptor = descriptor;
     }
 
-    public BString getName() {
+    public String getName() {
         return Name.getString();
     }
 
-    public void setName(BString name) {
+    public void setName(String name) {
         Name.setString(name);
     }
 
@@ -27,7 +27,7 @@ public class NameAndType {
         return Descriptor;
     }
 
-    public void setDescriptor(BString descriptor) {
+    public void setDescriptor(String descriptor) {
         Descriptor.setString(descriptor);
     }
 }

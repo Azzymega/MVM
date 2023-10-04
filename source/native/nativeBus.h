@@ -1,8 +1,9 @@
 #pragma once
 #include "../definitions.hpp"
-#define NBCALL _stdcall
+#include "windows.h"
+#define NBCALL __stdcall
 
-typedef void *jobject; // в будущем расписать вид расположения в памяти
+typedef void *jobject; 
 typedef void *jstring;
 typedef void *jweak;
 typedef void *jthrowable;
@@ -29,11 +30,49 @@ typedef float jfloat;
 typedef double jdouble;
 typedef jint jsize;
 
-enum ArgTypes { Object, Bool, Byte, Char, Short, Integer, Long, Double, Float, String };
+enum Types : u1 {
+  ObjectTA,
+  StringTA,
+  WeakTA,
+  ThrowableTA,
+  ClassTA,
+  MethodIDTA,
+  FieldIDTA,
+  ArrayTA,
+  ObjectArrayTA,
+  BooleanArrayTA,
+  ByteArrayTA,
+  CharArrayTA,
+  ShortArrayTA,
+  IntArrayTA,
+  LongArrayTA,
+  FloatArrayTA,
+  DoubleArrayTA,
+  BooleanTA,
+  ByteTA,
+  CharTA,
+  ShortTA,
+  IntTA,
+  LongTA,
+  FloatTA,
+  DoubleTA,
+  SizeTA
+};
 
-struct ArgumentTypes {
-  u4 length;
-  ArgTypes *types;
+struct DataHeader {
+  u4 Size;
+  u1 *Data;
+};
+
+struct TypesList {
+  u4 Count;
+  Types *List;
+};
+
+struct Object {
+  Types Type;
+  TypesList List;
+  DataHeader Header;
 };
 
 struct StackReturnValue {
@@ -41,9 +80,8 @@ struct StackReturnValue {
 };
 
 struct ArgumentsList {
-  ArgumentTypes types;
-  u4 length;
-  u1 *data;
+  TypesList types;
+  Object *Objects;
 };
 
 struct ParameterBundle {
@@ -51,4 +89,13 @@ struct ParameterBundle {
   StackReturnValue returnValue;
 };
 
-NBCALL void NBTEST(ParameterBundle BUNDLE); 
+/*
+  Function name format:
+    1. Java
+    2. _
+    3. <ClassName>
+    4. _
+    5. <FunctionName>
+
+    Example: extern "C" NBCALL void Java_System_Printf(ParameterBundle BUNDLE);
+*/

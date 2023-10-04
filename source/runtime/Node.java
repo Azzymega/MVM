@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM - JAVA STDLIB
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * /
+ */
+
 public class Node<T> {
     private T Object;
     private Node<T> NextNode;

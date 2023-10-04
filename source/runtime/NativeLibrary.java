@@ -9,21 +9,11 @@
 // (Wrapper over HMODULE)
 public class NativeLibrary {
     private String libraryName;
-    private byte[] libraryInternals;
 
-    public NativeLibrary(String libraryName, int LibrarySize) {
+    public native byte[] LoadNativeLibrary(String libraryName);
+    public NativeLibrary(String libraryName) {
         this.libraryName = libraryName;
-        this.libraryInternals = new byte[LibrarySize];
     }
-
-    public byte[] getLibraryInternals() {
-        return libraryInternals;
-    }
-
-    public void setLibraryInternals(byte[] libraryInternals) {
-        this.libraryInternals = libraryInternals;
-    }
-
     public String getLibraryName() {
         return libraryName;
     }

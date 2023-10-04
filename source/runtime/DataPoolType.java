@@ -12,7 +12,7 @@ public class DataPoolType {
     private MethodLink MethodLink;
     private FieldLink FieldLink;
     private double Double;
-    private BString String;
+    private String String;
     private long Long;
     private float Float;
     private int Integer;
@@ -54,11 +54,11 @@ public class DataPoolType {
         Double = aDouble;
     }
 
-    public BString getString() {
+    public String getString() {
         return String;
     }
 
-    public void setString(BString string) {
+    public void setString(String string) {
         String = string;
     }
 

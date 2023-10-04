@@ -15,11 +15,11 @@ public class ClassLink {
         ClassName = className;
     }
 
-    public BString getClassName() {
+    public String getClassName() {
         return ClassName.getString();
     }
 
-    public void setClassName(BString className) {
+    public void setClassName(String className) {
         ClassName.setString(className);
     }
 

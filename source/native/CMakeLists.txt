@@ -6,4 +6,9 @@ file(GLOB source
      "*.hpp"
      "*.cpp"
 )
+file(GLOB systemSource
+     "System/*.hpp"
+     "System/*.cpp"
+)
 add_library(Native SHARED ${source})
+add_library(System SHARED ${systemSource})

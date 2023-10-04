@@ -1,5 +1,6 @@
 #pragma once
 #include "classfile.hpp"
+#include "native/nativeBus.h"
 #include <vector>
 
 struct Class;
@@ -207,6 +208,7 @@ struct ClassFileBuffer {
   attributes *attrBuffer;
 };
 
+struct Object;
 struct Memory;
 
 struct Linker : public ILoadConflict<Linker *, Memory *>,
@@ -220,9 +222,7 @@ struct Linker : public ILoadConflict<Linker *, Memory *>,
   Linker *Resolve(Class *Object) override;
   Linker *Resolve(Classes *Object) override;
   Linker *Resolve(ClassLink *Object) override;
-}; // начать писать класс Machine внутри которого будет Memory и интерпретатор,
-   // дописать кучу в Memory!!!
-
+};
 struct Memory : public ILoadInteraction<Linker>,
                 ILoadConflict<AccessFlags, u2 *>,
                 ILoadConflict<Memory *, classFile *>,
