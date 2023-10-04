@@ -1,11 +1,9 @@
 #include "jar.hpp"
-#include <corecrt.h>
-#include <cstdlib>
 
 loaderComponent *loaderComponent::Resolve(std::string *Object) {
-  this->loadingStream.open(*Object);
+  this->loadingStream.open(*Object, std::ios::binary);
   if (!loadingStream.is_open() && *Object != "null") {
-    throw "[LOADER] FAIL LOADING FAILS!!!";
+    throw "[LOADER] FILE LOADING FAILS!!!";
   }
   return nullptr;
 }
@@ -57,11 +55,22 @@ JarLoader *JarLoader::Resolve(LocalFileHeaders *Object) {
       data.extraData.push_back(this->loader.buffer.Resolve(u1()));
     }
     Data dt;
-    while (loader.buffer.Resolve(u1()) != 80) {
-      loader.buffer.byteBufferCounter--; // hackfix!!!
-      dt.archiveData.push_back(this->loader.buffer.Resolve(u1())); // hackfix!!! 7zip can't count file size!
+    u1 q = 0; // hackfix
+    u1 w = 0; // hackfix
+    u1 e = 0; // hackfix
+    u1 r = 0; // hackfix
+    while (!(q == 'P' && w == 'K' && e == 0x3 && r == 0x4) && !(q == 'P' && w == 'K' && e == 0x1 && r == 0x2)) { // hackfix
+      this->loader.buffer.Resolve(&q); // hackfix
+      this->loader.buffer.Resolve(&w); // hackfix
+      this->loader.buffer.Resolve(&e); // hackfix
+      this->loader.buffer.Resolve(&r); // hackfix
+      loader.buffer.byteBufferCounter -= 4; // hackfix!!!
+      if ((q == 'P' && w == 'K' && e == 0x3 && r == 0x4) || (q == 'P' && w == 'K' && e == 0x1 && r == 0x2)) { // hackfix
+        break;
+      }
+      dt.archiveData.push_back(this->loader.buffer.Resolve(
+          u1())); // hackfix!!! 7zip can't count file size! дописать
     }
-    this->loader.buffer.byteBufferCounter-=1; // hackfix!!!
     hd.filename = filename;
     hd.extraData = data;
     hd.data = dt;
@@ -136,14 +145,17 @@ JarLoader *JarLoader::Resolve(EndOfCentralDirectoryRecord *Object) {
 }
 
 JarLoader *JarLoader::Resolve(JavaArhive *Object) {
-  Object->mainClassName =
-      std::string(this->buffer->locals.locals[0].data.archiveData.begin(),
-                  this->buffer->locals.locals[0].data.archiveData.end());
-  byteBuffer *buffer = new byteBuffer();
-  for (size_t i = 1; i < this->buffer->locals.locals.size(); i++) {
-    buffer->byteBufferCounter = 0;
-    buffer->buffer = this->buffer->locals.locals[i].data.archiveData;
-    Object->files.classFiles.emplace_back(buffer);
+  byteBuffer *buffer;
+  for (auto &&buf : this->buffer->locals.locals) {
+    if (buf.filename == "MANIFEST.MF") {
+      Object->mainClassName =
+          std::string(buf.data.archiveData.begin(), buf.data.archiveData.end());
+    } else {
+      buffer = new byteBuffer();
+      buffer->byteBufferCounter = 0;
+      buffer->buffer = buf.data.archiveData;
+      Object->files.classFiles.emplace_back(buffer);
+    }
   }
   return nullptr;
 }

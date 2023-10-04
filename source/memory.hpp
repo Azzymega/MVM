@@ -75,7 +75,8 @@ enum SmartAttributesType {
   NTExceptions,
   NTCode,
   NTLineNumberTable,
-  NTLocalVariableTable
+  NTLocalVariableTable,
+  NTSignature
 };
 
 struct Boiler {
@@ -105,6 +106,8 @@ struct NExceptions {
 struct NSourceFile {
   DataPoolType *name;
 };
+
+using NSignature = NSourceFile;
 
 struct NConstantValue {
   DataPoolType *constant;
@@ -160,6 +163,7 @@ struct NAttribute {
   NCode code;
   NLocalVariableTable lTable;
   NLineNumberTable liTable;
+  NSignature signature;
 };
 
 struct Field {

@@ -29,11 +29,16 @@ Memory *Memory::Resolve(ClassHeader *Object) {
           .elements[this->buffer.buffer->data.thisClass - 1]
           .constantClass.nameIndex -
       1);
-  Object->superClass.className = this->buffer.buffer->pool.Resolve(
-      this->buffer.buffer->pool
-          .elements[this->buffer.buffer->data.superClass - 1]
-          .constantClass.nameIndex -
-      1);
+  if (this->buffer.buffer->data.superClass == 0) {
+    Object->superClass.className = "NOPE";
+  } else {
+    Object->superClass.className = this->buffer.buffer->pool.Resolve(
+        this->buffer.buffer->pool
+            .elements[this->buffer.buffer->data.superClass - 1]
+            .constantClass.nameIndex -
+        1);
+  }
+
   return nullptr;
 }
 
@@ -98,20 +103,23 @@ Memory *Memory::Resolve(DataPool *Object) {
           TypeMetadata{
               ClassLink{*this->buffer.buffer->pool.elements
                              .at(this->buffer.buffer->pool.elements
-                                     .at(type.constantFieldRef.classIndex)
-                                     .constantClass.nameIndex)
+                                     .at(type.constantFieldRef.classIndex - 1)
+                                     .constantClass.nameIndex -
+                                 1)
                              .constantUTF8.utf8,
                         nullptr},
               NameAndType{
                   *this->buffer.buffer->pool.elements
                        .at(this->buffer.buffer->pool.elements
-                               .at(type.constantFieldRef.nameAndTypeIndex)
-                               .constantNameAndType.nameIndex)
+                               .at(type.constantFieldRef.nameAndTypeIndex - 1)
+                               .constantNameAndType.nameIndex -
+                           1)
                        .constantUTF8.utf8,
                   *this->buffer.buffer->pool.elements
                        .at(this->buffer.buffer->pool.elements
-                               .at(type.constantFieldRef.nameAndTypeIndex)
-                               .constantNameAndType.nameIndex)
+                               .at(type.constantFieldRef.nameAndTypeIndex - 1)
+                               .constantNameAndType.nameIndex -
+                           1)
                        .constantUTF8.utf8}},
           nullptr};
       Object->data.emplace_back(poolElement);
@@ -130,25 +138,31 @@ Memory *Memory::Resolve(DataPool *Object) {
       poolElement.tag = DataPoolTypes::MethodT;
       poolElement.Method = MethodLink{
           TypeMetadata{
-              ClassLink{std::string(
-                            *this->buffer.buffer->pool.elements
-                                 .at(this->buffer.buffer->pool.elements
-                                         .at(type.constantMethodRef.classIndex)
-                                         .constantClass.nameIndex)
-                                 .constantUTF8.utf8),
-                        nullptr},
+              ClassLink{
+                  std::string(
+                      *this->buffer.buffer->pool.elements
+                           .at(this->buffer.buffer->pool.elements
+                                   .at(type.constantMethodRef.classIndex - 1)
+                                   .constantClass.nameIndex -
+                               1)
+                           .constantUTF8.utf8),
+                  nullptr},
               NameAndType{
                   std::string(
                       *this->buffer.buffer->pool.elements
                            .at(this->buffer.buffer->pool.elements
-                                   .at(type.constantMethodRef.nameAndTypeIndex)
-                                   .constantNameAndType.nameIndex)
+                                   .at(type.constantMethodRef.nameAndTypeIndex -
+                                       1)
+                                   .constantNameAndType.nameIndex -
+                               1)
                            .constantUTF8.utf8),
                   std::string(
                       *this->buffer.buffer->pool.elements
                            .at(this->buffer.buffer->pool.elements
-                                   .at(type.constantMethodRef.nameAndTypeIndex)
-                                   .constantNameAndType.descriptorIndex)
+                                   .at(type.constantMethodRef.nameAndTypeIndex -
+                                       1)
+                                   .constantNameAndType.descriptorIndex -
+                               1)
                            .constantUTF8.utf8)}},
           nullptr};
       Object->data.emplace_back(poolElement);
@@ -173,7 +187,8 @@ Memory *Memory::Resolve(DataPool *Object) {
                   *this->buffer.buffer->pool.elements
                        .at(this->buffer.buffer->pool.elements
                                .at(type.constantMethodRef.classIndex - 1)
-                               .constantNameAndType.nameIndex)
+                               .constantNameAndType.nameIndex -
+                           1)
                        .constantUTF8.utf8,
                   *this->buffer.buffer->pool.elements
                        .at(this->buffer.buffer->pool.elements
@@ -311,6 +326,14 @@ Memory *Memory::Resolve(NAttributes *Object) {
       Nattr.code.tables = attr.code.tables;
       this->buffer.attrBuffer = &attr.code.attr;
       Resolve(&Nattr.code.attr);
+    } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
+               "Signature") {
+      Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
+      Nattr.type = SmartAttributesType::NTSignature;
+      Nattr.length = attr.length;
+      Nattr.signature.name =
+          &this->buffer.klassBuffer->pool.data.at(attr.signatureAttr.index - 1);
+      Object->attributes.push_back(Nattr);
     }
   }
   return nullptr;
@@ -374,7 +397,7 @@ Linker *Linker::Resolve(DataPool *Object) {
   return nullptr;
 }
 
-Linker * Linker::Resolve(Class *Object) {
+Linker *Linker::Resolve(Class *Object) {
   Resolve(&Object->mainInfo.Class);
   Resolve(&Object->mainInfo.superClass);
   Resolve(&Object->pool);

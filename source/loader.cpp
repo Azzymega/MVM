@@ -1,4 +1,6 @@
 #include "loader.hpp"
+#include <corecrt.h>
+#include <ios>
 #include <vector>
 
 void loader::Interact(byteBuffer *Object) {
@@ -20,8 +22,6 @@ loader *loader::Resolve(classFile *Object) {
   Resolve(&Object->attr);
   return nullptr;
 }
-
-
 
 loader *loader::Resolve(attributes *Object) {
   Object->attributes_count = buffer.Resolve(u2());
@@ -45,6 +45,13 @@ loader *loader::Resolve(attributes *Object) {
       Resolve(&attr.code.internalCode);
       Resolve(&attr.code.tables);
       Resolve(&attr.code.attr);
+    } else if (cpoolget(attr.name) == "Signature") {
+      attr.signatureAttr.index = buffer.Resolve(u2());
+    }
+    else{
+      for (size_t i = 0; i < attr.length; i++) {
+        attr.invalid.push_back(buffer.Resolve(u1()));
+      }
     }
   }
   return nullptr;
@@ -148,8 +155,8 @@ loader *loader::Resolve(classFileMetadata *Object) {
 }
 
 loader *loader::Resolve(std::string *Object) {
-  readStream.open(*Object);
-  if (!readStream.is_open() && *Object!="null") {
+  readStream.open(*Object, std::ios::binary);
+  if (!readStream.is_open() && *Object != "null") {
     throw "FAIL";
   }
   return nullptr;
@@ -208,7 +215,6 @@ loader *loader::Resolve(bytecode *Object) {
   return nullptr;
 }
 
-
 classFile *loader::Resolve(byteBuffer *Object) {
   classFile *fl = new classFile();
   this->file = fl;
@@ -226,7 +232,7 @@ classFile *loader::Resolve(byteBuffer *Object) {
 }
 
 std::string loader::cpoolget(u2 data) {
-  return *this->file->pool.elements[data-1].constantUTF8.utf8;
+  return *this->file->pool.elements[data - 1].constantUTF8.utf8;
 }
 
 byteBuffer *byteBuffer::Resolve(std::ifstream *Object) {

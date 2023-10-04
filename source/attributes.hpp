@@ -71,6 +71,10 @@ struct code {
   attributes attr;
 };
 
+struct signature {
+  u2 index;
+};
+
 struct attribute // переделать на умные атрибуты!!!
 {
   u2 name;
@@ -81,6 +85,8 @@ struct attribute // переделать на умные атрибуты!!!
   code code;
   lineNumberTable lineNumberTable;
   localVariableTable localVariableTable;
+  signature signatureAttr;
+  std::vector<u1> invalid;
   attribute();
   ~attribute();
 };

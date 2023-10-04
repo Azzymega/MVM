@@ -29,7 +29,7 @@ typedef float jfloat;
 typedef double jdouble;
 typedef jint jsize;
 
-enum ArgTypes { Object, Bool, Byte, Char, Short, Integer, Long, Double, Float };
+enum ArgTypes { Object, Bool, Byte, Char, Short, Integer, Long, Double, Float, String };
 
 struct ArgumentTypes {
   u4 length;
@@ -51,4 +51,4 @@ struct ParameterBundle {
   StackReturnValue returnValue;
 };
 
-NBCALL void NBTEST(ParameterBundle BUNDLE); // подумать о загрузчике native библиотек прямо в джаве
+NBCALL void NBTEST(ParameterBundle BUNDLE); 
