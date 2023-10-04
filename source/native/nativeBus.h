@@ -56,7 +56,8 @@ enum Types : u1 {
   LongTA,
   FloatTA,
   DoubleTA,
-  SizeTA
+  SizeTA,
+  NULLTA = 234
 };
 
 struct DataHeader {
