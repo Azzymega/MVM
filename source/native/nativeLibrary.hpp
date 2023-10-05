@@ -1,10 +1,12 @@
 #pragma once
 #include "../definitions.hpp"
-#include <windows.h>
+#include "nativeBus.h"
 #include <minwindef.h>
+#include <string>
 #include <vector>
+#include <windows.h>
 
-
+typedef void (*NativeCall)(ParameterBundle BUNDLE);
 struct NativeLoader;
 struct NativeBus;
 
@@ -22,10 +24,13 @@ struct NativeLoader : public ILoadConflict<NativeLoader *, NativeLibrary *> {
 
 struct NativeLibrariesBuffer {
   std::vector<NativeLibrary> libraries;
+  NativeCall BufferedCall;
 };
 
-struct NativeBus : ILoadConflict<NativeBus*, NativeLibrary*>{
+struct NativeBus : ILoadConflict<NativeBus *, NativeLibrary *>,
+                   ILoadConflict<NativeBus *, std::string *> {
   NativeLoader loader;
   NativeLibrariesBuffer buffer;
-  NativeBus * Resolve(NativeLibrary *Object) override;
+  NativeBus *Resolve(NativeLibrary *Object) override;
+  NativeBus *Resolve(std::string *Object) override;
 };

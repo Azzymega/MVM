@@ -1,6 +1,9 @@
 #pragma once
 #include "definitions.hpp"
+#include "memory.hpp"
 #include "native/nativeBus.h"
+#include "native/nativeLibrary.hpp"
+#include <cstdint>
 #include <stack>
 #include <vector>
 
@@ -231,22 +234,41 @@ struct NCode;
 struct Frame {
   Method *MethodReference;
   void *ReturnValue;
-  std::vector<Object> Locals;
-  std::stack<Object*> OperandStack;
+  std::deque<pointer *> Locals;
+  std::stack<pointer *> OperandStack;
   Class *ClassPoolReference;
   NCode *CodeReference;
 };
 
 struct Stack {
-  std::vector<Frame> Frames;
+  std::vector<Frame *> Frames;
 };
 
 struct Thread {
   Stack FStack;
 };
 
-struct Heap {
-  std::vector<Object*> ObjectHeap;
+struct PrimAllocationInfo {
+  Types primType;
+  u4 size;
+  int64_t data;
+};
+
+struct ArrayAllocationInfo {
+  Types arrayType;
+  int ArrayCount;
+  int ArraySizeofElement;
+};
+
+struct Engine;
+
+struct Heap : ILoadConflict<pointer *, Engine *> {
+  PrimAllocationInfo *prAllocationBuffer;
+  ArrayAllocationInfo *arrAllocationBuffer;
+  ClassLink *objAllocationBuffer;
+  std::vector<valRef *> fldHeap;
+  std::vector<objRef *> objHeap;
+  pointer *Resolve(Engine *Object) override;
 };
 
 struct StackBuffer {
@@ -254,8 +276,8 @@ struct StackBuffer {
 };
 
 struct ExecutionBuffer {
-  std::stack<Class*> ExecutingClass;
-   std::stack<Method*> ExecutingMethod;
+  std::stack<Class *> ExecutingClass;
+  std::stack<Method *> ExecutingMethod;
 };
 
 struct Engine : ILoadConflict<Engine *, Class *>,
@@ -266,6 +288,7 @@ struct Engine : ILoadConflict<Engine *, Class *>,
   Heap CurrentHeap;
   StackBuffer SBuffer;
   ExecutionBuffer EBuffer;
+  NativeBus NBus;
   Engine *Resolve(Class *Object) override;
 
 private:

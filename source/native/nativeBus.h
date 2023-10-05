@@ -57,7 +57,26 @@ enum Types : u1 {
   FloatTA,
   DoubleTA,
   SizeTA,
+  ObjReference,
+  ValReference,
   NULLTA = 234
+};
+
+struct pointer {
+  Types type;
+  void* point;
+};
+
+struct valRef {
+  Types type;
+  u4 size;
+  void* data;
+};
+
+struct objRef {
+  Types type;
+  u4 count;
+  void* pointers;
 };
 
 struct DataHeader {

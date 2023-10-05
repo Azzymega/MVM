@@ -15,3 +15,13 @@ NativeBus *NativeBus::Resolve(NativeLibrary *Object) {
   buffer.libraries.push_back(*Object);
   return nullptr;
 }
+
+NativeBus * NativeBus::Resolve(std::string *Object) {
+  for (auto &&libs : this->buffer.libraries) {
+    this->buffer.BufferedCall = (NativeCall)GetProcAddress(libs.nativeLibrary, Object->c_str());
+    if (this->buffer.BufferedCall) {
+      return nullptr;
+    }
+  }
+  return nullptr;
+}

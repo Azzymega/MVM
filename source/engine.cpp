@@ -24,13 +24,13 @@ Engine *Engine::Resolve(Frame *Object) {
   // стандартную функцию загрузки засунуть в стороннюю либу
   this->PC = 0;
   for (; PC < Object->CodeReference->internalCode.instructions->size(); PC++) {
-    switch (Object->CodeReference->internalCode.instructions->at(PC++)) {
+    switch (Object->CodeReference->internalCode.instructions->at(PC)) {
     case op_bipush: {
-      struct Object Byte;
+      struct Object Byte {};
       Byte.Type = ByteTA;
       Byte.Header.Size = 1;
       Byte.Header.Data =
-          (u1 *)alloca(sizeof(byte)); // Добавить проверку на NULL
+          (u1 *)malloc(sizeof(byte)); // Добавить проверку на NULL
       *Byte.Header.Data =
           Object->CodeReference->internalCode.instructions->at(++PC);
       Object->OperandStack.push(&Byte);
@@ -40,71 +40,234 @@ Engine *Engine::Resolve(Frame *Object) {
       Object->OperandStack.push(Object->OperandStack.top());
       break;
     };
+    case op_nop: {
+    };
+    case op_putfield: {
+      byte FirstByte =
+          Object->CodeReference->internalCode.instructions->at(PC++);
+      byte SecondByte =
+          Object->CodeReference->internalCode.instructions->at(PC++);
+      u2 CPIndex = FirstByte | SecondByte;
+      FieldLink Link =
+          Object->ClassPoolReference->pool.data.at(--CPIndex).Field;
+      struct Object Value = *Object->OperandStack.top();
+      Object->OperandStack.pop();
+      struct Object ObjectLink = *Object->OperandStack.top();
+      Object->OperandStack.pop();
+      memcpy((void *)ObjectLink.Header.Data, (void *)&Value,
+             sizeof(struct Object));
+      break;
+    };
+    case op_astore_0: {
+      struct Object *Data{};
+      Data = Object->OperandStack.top();
+      Object->OperandStack.pop();
+      Object->Locals.at(0) = *Data;
+    }
+    case op_astore_1: {
+      struct Object *Data{};
+      Data = Object->OperandStack.top();
+      Object->OperandStack.pop();
+      Object->Locals.at(1) = *Data;
+    }
+    case op_astore_2: {
+      struct Object *Data{};
+      Data = Object->OperandStack.top();
+      Object->OperandStack.pop();
+      Object->Locals.at(2) = *Data;
+    }
+    case op_astore_3: {
+      struct Object *Data{};
+      Data = Object->OperandStack.top();
+      Object->OperandStack.pop();
+      Object->Locals.at(3) = *Data;
+    }
     case op_iconst_0: {
-      struct Object IConst;
+      struct Object IConst {};
       IConst.Type = IntTA;
       IConst.Header.Size = sizeof(jint);
-      IConst.Header.Data = (u1 *)alloca(sizeof(jint));
+      IConst.Header.Data = (u1 *)malloc(sizeof(jint));
       *IConst.Header.Data = 3;
       Object->OperandStack.push(&IConst);
       break;
     }
     case op_iconst_1: {
-      struct Object IConst;
+      struct Object IConst {};
       IConst.Type = IntTA;
       IConst.Header.Size = sizeof(jint);
-      IConst.Header.Data = (u1 *)alloca(sizeof(jint));
+      IConst.Header.Data = (u1 *)malloc(sizeof(jint));
       *IConst.Header.Data = 4;
       Object->OperandStack.push(&IConst);
       break;
     }
     case op_iconst_2: {
-      struct Object IConst;
+      struct Object IConst {};
       IConst.Type = IntTA;
       IConst.Header.Size = sizeof(jint);
-      IConst.Header.Data = (u1 *)alloca(sizeof(jint));
+      IConst.Header.Data = (u1 *)malloc(sizeof(jint));
       *IConst.Header.Data = 5;
       Object->OperandStack.push(&IConst);
       break;
     }
     case op_iconst_3: {
-      struct Object IConst;
+      struct Object IConst {};
       IConst.Type = IntTA;
       IConst.Header.Size = sizeof(jint);
-      IConst.Header.Data = (u1 *)alloca(sizeof(jint));
+      IConst.Header.Data = (u1 *)malloc(sizeof(jint));
       *IConst.Header.Data = 6;
       Object->OperandStack.push(&IConst);
       break;
     }
     case op_iconst_4: {
-      struct Object IConst;
+      struct Object IConst {};
       IConst.Type = IntTA;
       IConst.Header.Size = sizeof(jint);
-      IConst.Header.Data = (u1 *)alloca(sizeof(jint));
+      IConst.Header.Data = (u1 *)malloc(sizeof(jint));
       *IConst.Header.Data = 7;
       Object->OperandStack.push(&IConst);
       break;
     }
     case op_iconst_5: {
-      struct Object IConst;
+      struct Object IConst {};
       IConst.Type = IntTA;
       IConst.Header.Size = sizeof(jint);
-      IConst.Header.Data = (u1 *)alloca(sizeof(jint));
+      IConst.Header.Data = (u1 *)malloc(sizeof(jint));
       *IConst.Header.Data = 8;
       Object->OperandStack.push(&IConst);
       break;
     }
+    case op_return: {
+      this->Frames.Frames.pop_back();
+      return nullptr;
+    };
+    case op_invokestatic: {
+      std::vector<struct Object> Objects{};
+      while (true) {
+        struct Object Arg = *Object->OperandStack.top();
+        Object->OperandStack.pop();
+        Objects.push_back(Arg);
+        if (Arg.Type == ClassTA) {
+          break;
+        }
+      }
+      Frame initFrame;
+      for (auto &&arg : Objects) {
+        initFrame.OperandStack.push(&arg);
+      }
+      byte FirstByte =
+          Object->CodeReference->internalCode.instructions->at(PC++);
+      byte SecondByte =
+          Object->CodeReference->internalCode.instructions->at(PC++);
+      u2 CPIndex = FirstByte | SecondByte;
+      MethodLink Link =
+          Object->ClassPoolReference->pool.data.at(--CPIndex).Method;
+      initFrame.ClassPoolReference = Link.data.Class.link;
+      initFrame.MethodReference = Link.Method;
+      initFrame.CodeReference = &Link.Method->attributes.attributes.at(0).code;
+      Resolve(&initFrame);
+      break;
+    }
+    case op_invokevirtual: {
+      bool isNative{};
+      std::vector<struct Object> Objects{};
+      while (true) {
+        struct Object Arg = *Object->OperandStack.top();
+        Object->OperandStack.pop();
+        Objects.push_back(Arg);
+        if (Arg.Type == ClassTA) {
+          break;
+        }
+      }
+      Frame initFrame;
+      for (auto &&arg : Objects) {
+        initFrame.OperandStack.push(&arg);
+      }
+      byte FirstByte =
+          Object->CodeReference->internalCode.instructions->at(PC++);
+      byte SecondByte =
+          Object->CodeReference->internalCode.instructions->at(PC++);
+      u2 CPIndex = FirstByte | SecondByte;
+      MethodLink Link =
+          Object->ClassPoolReference->pool.data.at(--CPIndex).Method;
+      for (auto &&flag : Link.Method->methodFlags.flags) {
+        if (flag == accessFlags::ACC_NATIVE) {
+          if (Link.Method->name == "LoadNativeLibrary") {
+            NativeLibrary lib;
+            std::string name;
+            for (int x = 0; x < Objects.at(0).Header.Size; x++) {
+              name += ((char)Objects.at(0).Header.Data[x]);
+            }
+            lib.libraryName = name;
+            this->NBus.Resolve(&lib);
+            isNative = true;
+            break;
+          } else {
+            std::string funName =
+                "Java_" + Link.data.Class.className + "_" + Link.Method->name;
+            ParameterBundle bundle;
+            bundle.returnValue.stackTop = nullptr;
+            bundle.args.Objects = &Objects.at(0);
+            this->NBus.Resolve(&funName);
+            if (NBus.buffer.BufferedCall) {
+
+              NBus.buffer.BufferedCall(bundle);
+              isNative = true;
+            }
+          }
+        }
+      }
+      if (!isNative) {
+        initFrame.ClassPoolReference = Link.data.Class.link;
+        initFrame.MethodReference = Link.Method;
+        initFrame.CodeReference =
+            &Link.Method->attributes.attributes.at(0).code;
+        Resolve(&initFrame);
+        break;
+      }
+    };
     case op_invokespecial: {
-        // дописать!!!
+      if (Object->ClassPoolReference->mainInfo.superClass.className == "NOPE") {
+        this->Frames.Frames.pop_back();
+        return nullptr;
+      }
+      std::vector<struct Object> Objects;
+      bool reading = true;
+      while (reading) {
+        struct Object Arg = *Object->OperandStack.top();
+        Object->OperandStack.pop();
+        Objects.push_back(Arg);
+        if (Arg.Type == ObjectTA) {
+          reading = false;
+          break;
+        }
+      }
+      Frame initFrame;
+      for (auto &&arg : Objects) {
+        initFrame.Locals.push_front(arg);
+      }
+      byte FirstByte =
+          Object->CodeReference->internalCode.instructions->at(++PC);
+      byte SecondByte =
+          Object->CodeReference->internalCode.instructions->at(++PC);
+      u2 CPIndex = FirstByte | SecondByte;
+      MethodLink Link =
+          Object->ClassPoolReference->pool.data.at(--CPIndex).Method;
+      initFrame.ClassPoolReference = Link.data.Class.link;
+      initFrame.MethodReference = Link.Method;
+      initFrame.CodeReference = &Link.Method->attributes.attributes.at(0).code;
+
+      this->Frames.Frames.push_back(&initFrame);
+      Resolve(&initFrame);
+      break;
     };
     case op_castore: {
       struct Object Value = *Object->OperandStack.top();
+      Object->OperandStack.pop();
       struct Object Index = *Object->OperandStack.top();
+      Object->OperandStack.pop();
       struct Object Array = *Object->OperandStack.top();
       Object->OperandStack.pop();
-      Object->OperandStack.pop();
-      Object->OperandStack.pop();
-      u4 *UIndex = (u4 *)&Index.Header.Data[0];
+      u1 *UIndex = (u1 *)Index.Header.Data;
       memcpy((void *)&Array.Header.Data[*UIndex * sizeof(struct Object)],
              (void *)&Value, sizeof(struct Object));
       break;
@@ -115,19 +278,19 @@ Engine *Engine::Resolve(Frame *Object) {
       Short.Header.Size = 2;
       Short.Header.Data = (u1 *)alloca(sizeof(short));
       *Short.Header.Data =
-          Object->CodeReference->internalCode.instructions->at(PC++) |
-          Object->CodeReference->internalCode.instructions->at(PC++);
+          Object->CodeReference->internalCode.instructions->at(++PC) |
+          Object->CodeReference->internalCode.instructions->at(++PC);
       Object->OperandStack.push(&Short);
       break;
     }
     case op_aastore: {
       struct Object Value = *Object->OperandStack.top();
+      Object->OperandStack.pop();
       struct Object Index = *Object->OperandStack.top();
+      Object->OperandStack.pop();
       struct Object Array = *Object->OperandStack.top();
       Object->OperandStack.pop();
-      Object->OperandStack.pop();
-      Object->OperandStack.pop();
-      u4 *UIndex = (u4 *)&Index.Header.Data[0];
+      u4 *UIndex = (u4 *)Index.Header.Data;
       memcpy((void *)&Array.Header.Data[*UIndex * sizeof(struct Object)],
              (void *)&Value, sizeof(struct Object));
       break;
@@ -170,9 +333,9 @@ Engine *Engine::Resolve(Frame *Object) {
     }
     case op_new: {
       byte FirstByte =
-          Object->CodeReference->internalCode.instructions->at(PC++);
+          Object->CodeReference->internalCode.instructions->at(++PC);
       byte SecondByte =
-          Object->CodeReference->internalCode.instructions->at(PC++);
+          Object->CodeReference->internalCode.instructions->at(++PC);
       u2 CPIndex = FirstByte | SecondByte;
       Class *Link =
           Object->ClassPoolReference->pool.data.at(--CPIndex).Class.link;
@@ -180,16 +343,17 @@ Engine *Engine::Resolve(Frame *Object) {
       struct Object *Obj = new struct Object();
       Obj->Type = ObjectTA;
       Obj->List.Count = 1;
+      Obj->Header.Size = sizeof(struct Object) * Size;
       Obj->Header.Data = (u1 *)malloc(sizeof(struct Object) * Size);
       Object->OperandStack.push(Obj);
       break;
     }
     case op_newarray: {
       struct Object Index = *Object->OperandStack.top();
-      u4 *UIndex = (u4 *)Index.Header.Data;
+      u1 *UIndex = (u1 *)Index.Header.Data;
       Object->OperandStack.pop();
       byte FirstByte =
-          Object->CodeReference->internalCode.instructions->at(PC++);
+          Object->CodeReference->internalCode.instructions->at(++PC);
       switch (FirstByte) {
       case 4: {
         struct Object *Array = new struct Object();
@@ -256,6 +420,7 @@ Engine *Engine::Resolve(Frame *Object) {
         break;
       }
       }
+      break;
     };
     case op_anewarray: {
       struct Object Index = *Object->OperandStack.top();
@@ -401,5 +566,47 @@ Engine *Engine::Resolve(Frame *Object) {
     }
     }
   }
+  return nullptr;
+}
+
+pointer *Heap::Resolve(Engine *Object) {
+  if (this->arrAllocationBuffer != nullptr) {
+    pointer *pnt = new pointer();
+    objRef *ref = new objRef();
+    ref->type = arrAllocationBuffer->arrayType;
+    ref->count = arrAllocationBuffer->ArrayCount;
+    ref->pointers =
+        malloc(ref->count * sizeof(arrAllocationBuffer->ArraySizeofElement));
+    this->objHeap.push_back(ref);
+    pnt->type = ref->type;
+    pnt->point = this->objHeap.back();
+    return pnt;
+  } else if (this->objAllocationBuffer != nullptr) {
+    ClassLink *link = this->objAllocationBuffer;
+    pointer *pnt = new pointer();
+    objRef *ref = new objRef();
+    ref->type = ObjectTA;
+    ref->count = link->link->fields.fields.size();
+    ref->pointers = malloc(ref->count * sizeof(objRef));
+    this->objHeap.push_back(ref);
+    pnt->type = ObjectTA;
+    pnt->point = this->objHeap.back();
+    return pnt;
+  } else if (this->prAllocationBuffer != nullptr) {
+    pointer *pnt = new pointer();
+    valRef *ref = new valRef();
+    ref->type = prAllocationBuffer->primType;
+    ref->size = prAllocationBuffer->size;
+    ref->data = malloc(ref->size);
+    *(u1*)ref->data = prAllocationBuffer->data;
+    pnt->type = ref->type;
+    pnt->point = this->objHeap.back();
+    return pnt;
+  } else {
+    throw "[HEAP CONTROLLER] NO ALLOCATION INFO";
+  }
+  this->objAllocationBuffer = nullptr;
+  this->arrAllocationBuffer = nullptr;
+  this->prAllocationBuffer = nullptr;
   return nullptr;
 }

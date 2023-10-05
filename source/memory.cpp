@@ -186,7 +186,7 @@ Memory *Memory::Resolve(DataPool *Object) {
               NameAndType{
                   *this->buffer.buffer->pool.elements
                        .at(this->buffer.buffer->pool.elements
-                               .at(type.constantMethodRef.classIndex - 1)
+                               .at(type.constantMethodRef.nameAndTypeIndex - 1)
                                .constantNameAndType.nameIndex -
                            1)
                        .constantUTF8.utf8,
@@ -326,6 +326,7 @@ Memory *Memory::Resolve(NAttributes *Object) {
       Nattr.code.tables = attr.code.tables;
       this->buffer.attrBuffer = &attr.code.attr;
       Resolve(&Nattr.code.attr);
+      Object->attributes.push_back(Nattr);
     } else if (this->buffer.buffer->pool.Resolve(attr.name - 1) ==
                "Signature") {
       Nattr.name = &this->buffer.klassBuffer->pool.data.at(attr.name - 1);
@@ -362,6 +363,15 @@ Linker *Linker::Resolve(DataPool *Object) {
           for (auto &&method : klazz->methods.methods) {
             if (method.name == poolElement.Method.data.info.name) {
               poolElement.Method.Method = &method;
+            }
+          }
+        }
+        for (auto &&klaz : this->buffer->info.classes) {
+          for (auto &&methklz : klaz->methods.methods) {
+            if ((poolElement.Method.data.info.descriptor ==
+                 methklz.signature) &&
+                (poolElement.Method.data.info.name == methklz.name)) {
+              poolElement.Method.Method = &methklz;
             }
           }
         }
