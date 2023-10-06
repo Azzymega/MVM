@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
 #pragma once
 #include "classfile.hpp"
 #include "native/nativeBus.h"
@@ -224,7 +232,7 @@ struct Linker : public ILoadConflict<Linker *, Memory *>,
   Linker *Resolve(ClassLink *Object) override;
 };
 struct Memory : public ILoadInteraction<Linker>,
-                ILoadConflict<AccessFlags, u2 *>,
+                ILoadConflict<AccessFlags, u1 *>,
                 ILoadConflict<Memory *, classFile *>,
                 ILoadConflict<Memory *, ClassHeader *>,
                 ILoadConflict<Memory *, DataPool *>,
@@ -239,7 +247,7 @@ struct Memory : public ILoadInteraction<Linker>,
   void Interact(Linker *Object) override;
   Memory *Resolve(classFile *Object) override;
   Memory *Resolve(ClassHeader *Object) override;
-  AccessFlags Resolve(unsigned short *Object) override;
+  AccessFlags Resolve(u1 *Object) override;
   Memory *Resolve(DataPool *Object) override;
   Memory *Resolve(Interfaces *Object) override;
   Memory *Resolve(Fields *Object) override;

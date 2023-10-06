@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
 #pragma once
 #include "definitions.hpp"
 #include "memory.hpp"
@@ -232,6 +240,7 @@ struct Method;
 struct NCode;
 
 struct Frame {
+  u4 PC;
   Method *MethodReference;
   void *ReturnValue;
   std::deque<pointer *> Locals;
@@ -251,6 +260,9 @@ struct Thread {
 struct PrimAllocationInfo {
   Types primType;
   u4 size;
+  double dataF;
+  char charU;
+  wchar_t charW;
   int64_t data;
 };
 
@@ -282,7 +294,6 @@ struct ExecutionBuffer {
 
 struct Engine : ILoadConflict<Engine *, Class *>,
                 ILoadConflict<Engine *, Frame *> {
-  u4 PC;
   Stack Frames;
   MemoryBuffer Buffer;
   Heap CurrentHeap;

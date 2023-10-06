@@ -6,18 +6,23 @@
  * /
  */
 
+
+package java.lang;
+
+
+
 public class String {
-    private char[] Characters;
-
-    public String(char[] characters) {
-        Characters = characters;
+	private byte value[]; // Only ASCII now
+	public String(){
+		value = new byte[0];
+	}
+	public byte[] returnValue(){
+		return value;
+	}
+	public String(String value) {
+		this.value = value.returnValue();
     }
-
-    public char[] getCharacters() {
-        return Characters;
-    }
-
-    public void setCharacters(char[] characters) {
-        Characters = characters;
-    }
+	public String(byte value[]){
+		this.value = value;
+	}
 }

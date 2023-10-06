@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
 #pragma once
 #include "attributes.hpp"
 #include "constantPoolTypes.hpp"
@@ -12,21 +20,21 @@ struct classFileMetadata : public ILoadInteraction<loader> {
   u4 magic;
   u2 minVersion;
   u2 maxVersion;
-  u2 accessFlags;
+  u1 accessFlags[2];
   u2 thisClass;
   u2 superClass;
   void Interact(loader *Object) override;
 };
 
 struct field {
-  u2 access_flags;
+  u1 accessFlags[2];
   u2 name_index;
   u2 signature_index;
   attributes attributes;
 };
 
 struct method {
-  u2 access_flags;
+  u1 accessFlags[2];
   u2 name_index;
   u2 signature_index;
   attributes attributes;

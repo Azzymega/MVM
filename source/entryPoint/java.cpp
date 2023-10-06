@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
 #include "../../source/jar/jar.hpp"
 #include "../../source/loader.hpp"
 #include "../../source/memory.hpp"

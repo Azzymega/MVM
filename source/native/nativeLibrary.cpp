@@ -1,3 +1,12 @@
+/*
+ *
+ *  * PROJECT:     MVM
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
+
 #include "nativeLibrary.hpp"
 #include <libloaderapi.h>
 
@@ -7,6 +16,9 @@ void NativeLibrary::Interact(NativeBus *Object) { Object->Resolve(this); }
 
 NativeLoader *NativeLoader::Resolve(NativeLibrary *Object) {
   Object->nativeLibrary = LoadLibrary(Object->libraryName.c_str());
+  if (!Object->nativeLibrary) {
+    throw "[Native Library Loader] Loading failes!";
+  }
   return nullptr;
 }
 

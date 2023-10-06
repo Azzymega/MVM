@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM - Jar/zip library
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
 #include "jar.hpp"
 
 loaderComponent *loaderComponent::Resolve(std::string *Object) {

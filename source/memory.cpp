@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
 #include "memory.hpp"
 #include <vector>
 
@@ -23,7 +31,7 @@ Memory *Memory::Resolve(classFile *Object) {
 Memory *Memory::Resolve(ClassHeader *Object) {
   Object->minVersion = this->buffer.buffer->data.minVersion;
   Object->maxVersion = this->buffer.buffer->data.maxVersion;
-  Object->flags = Resolve(&this->buffer.buffer->data.accessFlags);
+  Object->flags = Resolve(this->buffer.buffer->data.accessFlags);
   Object->Class.className = this->buffer.buffer->pool.Resolve(
       this->buffer.buffer->pool
           .elements[this->buffer.buffer->data.thisClass - 1]
@@ -42,40 +50,43 @@ Memory *Memory::Resolve(ClassHeader *Object) {
   return nullptr;
 }
 
-AccessFlags Memory::Resolve(unsigned short *Object) {
+AccessFlags Memory::Resolve(u1 *Object) {
   AccessFlags flags;
-  if ((*Object & accessFlags::ACC_FINAL) != 0) {
+  if (((Object[0] & accessFlags::ACC_FINAL) || (Object[1] & accessFlags::ACC_FINAL)) != 0) {
+    flags.flags.push_back(ACC_FINAL);
+  }
+  if (((Object[0] & accessFlags::ACC_ABSTRACT) || (Object[1] & accessFlags::ACC_ABSTRACT)) != 0) {
+    flags.flags.push_back(ACC_ABSTRACT);
+  }
+  if (((Object[0] & accessFlags::ACC_PRIVATE) || (Object[1] & accessFlags::ACC_PRIVATE)) != 0) {
+    flags.flags.push_back(ACC_PRIVATE);
+  }
+  if (((Object[0] & accessFlags::ACC_PROTECTED) || (Object[1] & accessFlags::ACC_PROTECTED)) != 0) {
+    flags.flags.push_back(ACC_PROTECTED);
+  }
+  if (((Object[0] & accessFlags::ACC_PUBLIC) || (Object[1] & accessFlags::ACC_PUBLIC)) != 0) {
     flags.flags.push_back(ACC_PUBLIC);
   }
-  if ((*Object & accessFlags::ACC_ABSTRACT) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
+  if (((Object[0] & accessFlags::ACC_STATIC) || (Object[1] & accessFlags::ACC_STATIC)) != 0) {
+    flags.flags.push_back(ACC_STATIC);
   }
-  if ((*Object & accessFlags::ACC_PRIVATE) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
+  if (((Object[0] & accessFlags::ACC_SYNTHETIC) || (Object[1] & accessFlags::ACC_SYNTHETIC)) != 0) {
+    flags.flags.push_back(ACC_SYNTHETIC);
   }
-  if ((*Object & accessFlags::ACC_PROTECTED) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
+  if ((((Object[0] & accessFlags::ACC_ANNOTATION) != 0 )|| (Object[1] & accessFlags::ACC_ANNOTATION)) != 0) {
+    flags.flags.push_back(ACC_ANNOTATION);
   }
-  if ((*Object & accessFlags::ACC_PUBLIC) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
+  if ((((Object[0] & accessFlags::ACC_CENUM ) != 0) || (Object[1] & accessFlags::ACC_CENUM)) != 0) {
+    flags.flags.push_back(ACC_CENUM);
   }
-  if ((*Object & accessFlags::ACC_STATIC) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
+  if ((((Object[0] & accessFlags::ACC_INTERFACE) != 0 )|| (Object[1] & accessFlags::ACC_INTERFACE)) != 0) {
+    flags.flags.push_back(ACC_INTERFACE);
   }
-  if ((*Object & accessFlags::ACC_SYNTHETIC) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
+  if ((((Object[0] & accessFlags::ACC_SUPER) != 0 )|| (Object[1] & accessFlags::ACC_SUPER)) != 0) {
+    flags.flags.push_back(ACC_SUPER);
   }
-  if ((*Object & accessFlags::ACC_ANNOTATION) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
-  }
-  if ((*Object & accessFlags::ACC_CENUM) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
-  }
-  if ((*Object & accessFlags::ACC_INTERFACE) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
-  }
-  if ((*Object & accessFlags::ACC_SUPER) != 0) {
-    flags.flags.push_back(ACC_PUBLIC);
+  if (Object[0] == 1) {
+    flags.flags.push_back(ACC_NATIVE);
   }
   return flags;
 }
@@ -238,7 +249,7 @@ Memory *Memory::Resolve(Fields *Object) {
     this->buffer.attrBuffer = &fld.attributes;
     Resolve(&attrs);
     Object->fields.emplace_back(Field{
-        Resolve(&fld.access_flags),
+        Resolve(fld.accessFlags),
         std::string(*this->buffer.buffer->pool.elements.at(fld.name_index - 1)
                          .constantUTF8.utf8),
         std::string(
@@ -255,7 +266,7 @@ Memory *Memory::Resolve(Methods *Object) {
     this->buffer.attrBuffer = &mth.attributes;
     Resolve(&attrs);
     Object->methods.emplace_back(Method{
-        Resolve(&mth.access_flags),
+        Resolve(mth.accessFlags),
         std::string(*this->buffer.buffer->pool.elements.at(mth.name_index - 1)
                          .constantUTF8.utf8),
         std::string(
@@ -370,8 +381,11 @@ Linker *Linker::Resolve(DataPool *Object) {
           for (auto &&methklz : klaz->methods.methods) {
             if ((poolElement.Method.data.info.descriptor ==
                  methklz.signature) &&
-                (poolElement.Method.data.info.name == methklz.name)) {
+                (poolElement.Method.data.info.name == methklz.name) &&
+                (poolElement.Method.data.Class.className ==
+                 klaz->mainInfo.Class.className)) {
               poolElement.Method.Method = &methklz;
+              break;
             }
           }
         }

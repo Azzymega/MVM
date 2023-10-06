@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
 #include "../source/engine.hpp"
 #include "../source/jar/jar.hpp"
 #include "../source/loader.hpp"
@@ -43,7 +51,7 @@ int main() {
     std::cout << "LINKER TEST FAILED!!!" << std::endl;
   }
   Engine eng;
-  eng.Resolve(mem.info.classes.at(24));
+  eng.Resolve(mem.info.classes.at(25));
   NAttribute gdd = mem.info.classes.at(0)->methods.methods[0].attributes.attributes[0];
   return 0;
 }

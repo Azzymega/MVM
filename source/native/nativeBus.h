@@ -1,3 +1,12 @@
+/*
+ *
+ *  * PROJECT:     MVM - Native Bus implementation
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
+
 #pragma once
 #include "../definitions.hpp"
 #include "windows.h"
@@ -101,7 +110,7 @@ struct StackReturnValue {
 
 struct ArgumentsList {
   TypesList types;
-  Object *Objects;
+  void *Objects;
 };
 
 struct ParameterBundle {
@@ -117,5 +126,5 @@ struct ParameterBundle {
     4. _
     5. <FunctionName>
 
-    Example: extern "C" NBCALL void Java_System_Printf(ParameterBundle BUNDLE);
+    Example: extern "C" void NBCALL Java_System_Printf(ParameterBundle BUNDLE);
 */

@@ -1,3 +1,11 @@
+/*
+ *
+ *  * PROJECT:     MVM
+ *  * LICENSE:     GPL - See COPYING in the top level directory
+ *  * PROGRAMMER:  Maltsev Daniil <brickexberiment@lenta.ru>
+ * 
+ */
+
 #include "loader.hpp"
 #include <corecrt.h>
 #include <ios>
@@ -13,7 +21,8 @@ loader *loader::Resolve(classFile *Object) {
   Interact(&this->buffer);
   Resolve(&Object->data);
   Resolve(&Object->pool);
-  Object->data.accessFlags = buffer.Resolve(u2());
+  Object->data.accessFlags[0] = buffer.Resolve(u1());
+  Object->data.accessFlags[1] = buffer.Resolve(u1());
   Object->data.thisClass = buffer.Resolve(u2());
   Object->data.superClass = buffer.Resolve(u2());
   Resolve(&Object->intrf);
@@ -47,8 +56,7 @@ loader *loader::Resolve(attributes *Object) {
       Resolve(&attr.code.attr);
     } else if (cpoolget(attr.name) == "Signature") {
       attr.signatureAttr.index = buffer.Resolve(u2());
-    }
-    else{
+    } else {
       for (size_t i = 0; i < attr.length; i++) {
         attr.invalid.push_back(buffer.Resolve(u1()));
       }
@@ -61,7 +69,8 @@ loader *loader::Resolve(fields *Object) {
   Object->fieldsCount = buffer.Resolve(u2());
   Object->elements = std::vector<field>(Object->fieldsCount);
   for (auto &&field : Object->elements) {
-    field.access_flags = buffer.Resolve(u2());
+    field.accessFlags[0] = buffer.Resolve(u1());
+    field.accessFlags[1] = buffer.Resolve(u1());
     field.name_index = buffer.Resolve(u2());
     field.signature_index = buffer.Resolve(u2());
     Resolve(&field.attributes);
@@ -82,7 +91,8 @@ loader *loader::Resolve(methods *Object) {
   Object->methodsCount = buffer.Resolve(u2());
   Object->elements = std::vector<method>(Object->methodsCount);
   for (auto &&method : Object->elements) {
-    method.access_flags = buffer.Resolve(u2());
+    method.accessFlags[0] = buffer.Resolve(u1());
+    method.accessFlags[1] = buffer.Resolve(u1());
     method.name_index = buffer.Resolve(u2());
     method.signature_index = buffer.Resolve(u2());
     Resolve(&method.attributes);
@@ -221,7 +231,8 @@ classFile *loader::Resolve(byteBuffer *Object) {
   this->buffer = *Object;
   Resolve(&fl->data);
   Resolve(&fl->pool);
-  fl->data.accessFlags = buffer.Resolve(u2());
+  fl->data.accessFlags[0] = buffer.Resolve(u1());
+  fl->data.accessFlags[1] = buffer.Resolve(u1());
   fl->data.thisClass = buffer.Resolve(u2());
   fl->data.superClass = buffer.Resolve(u2());
   Resolve(&fl->intrf);
@@ -266,7 +277,7 @@ unsigned int byteBuffer::Resolve(unsigned int Object) {
 
 unsigned short byteBuffer::Resolve(unsigned short Object) {
   Object = 4;
-  u2 temp[2];
+  u1 temp[2];
   temp[0] = buffer[byteBufferCounter];
   temp[1] = buffer[byteBufferCounter + 1];
   byteBufferCounter += sizeof(u2);
@@ -291,7 +302,7 @@ void byteBuffer::Resolve(unsigned int *Object) {
 }
 
 void byteBuffer::Resolve(unsigned short *Object) {
-  u1 temp[2];
+  u2 temp[2];
   temp[0] = buffer[byteBufferCounter];
   temp[1] = buffer[byteBufferCounter + 1];
   byteBufferCounter += sizeof(u2);

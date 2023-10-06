@@ -6,4 +6,4 @@ set(CMAKE_JAVA_COMPILE_FLAGS "-source" "1.7" "-target" "1.7")
 file(GLOB runtimeSrc
      "*.java"
 )
-add_jar(Runtime ${runtimeSrc})
+#add_jar(Runtime ${runtimeSrc})
