@@ -8,7 +8,8 @@
 
 public class System {
 
-    public native static void printf(String ggg);
+    public native static void system(String command);
+    public native static void printf(String message);
     public static void main(String[] args) {
         String str = "System.dll";
         NativeLibrary library = new NativeLibrary(str);

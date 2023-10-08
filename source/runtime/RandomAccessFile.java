@@ -13,9 +13,9 @@ public class RandomAccessFile {
         this.handler = handler;
     }
     public native void readBytes(byte[] bytes, int len, FileHandler handler);
+    public native void writeBytes(byte[] bytes, int len, FileHandler handler);
     public native void OpenStream(String params, FileHandler handler);
     public native void CloseStream(FileHandler handler);
-
     public FileHandler getHandler() {
         return handler;
     }
